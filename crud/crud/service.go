@@ -9,10 +9,7 @@ import (
 )
 
 type CrudService interface {
-	Create()
-	Retrieve()
-	Update()
-	Delete()
+	Retrieve(myObjectContext) (ObjectResponse, error)
 }
 
 type Service struct {
@@ -25,6 +22,9 @@ func NewService(db *sqlx.DB) *Service {
 	}
 }
 
-func (s Service) Retrieve() {
+func (s Service) Retrieve(c myObjectContext) (ObjectResponse, error) {
+	fmt.Printf("Context's name is: " + c.name)
+	var resp ObjectResponse
 	fmt.Printf("This implements the Retrieve function of the interface. Then what?")
+	return resp, nil
 }
