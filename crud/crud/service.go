@@ -1,6 +1,7 @@
 package crud
 
 import (
+	"context"
 	"fmt"
 
 	"experiments/crud/crud/store"
@@ -9,7 +10,7 @@ import (
 )
 
 type CrudService interface {
-	Retrieve(myObjectContext) (ObjectResponse, error)
+	Retrieve(context.Context, string) (string, error)
 }
 
 type Service struct {
@@ -22,9 +23,10 @@ func NewService(db *sqlx.DB) *Service {
 	}
 }
 
-func (s Service) Retrieve(c myObjectContext) (ObjectResponse, error) {
-	fmt.Printf("Context's name is: " + c.name)
-	var resp ObjectResponse
-	fmt.Printf("This implements the Retrieve function of the interface. Then what?")
-	return resp, nil
+func (s Service) Retrieve(c context.Context, str string) (string, error) {
+	fmt.Printf("Inside Retrieve implementation of interface. str = " + str)
+	if str == "" {
+		return "Hello", nil
+	}
+	return "Hi", nil
 }

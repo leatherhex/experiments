@@ -2,6 +2,7 @@ package crud
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -27,10 +28,14 @@ func MakeHandler(svc CrudService) {
 }
 
 func decodeRetrieveObjectRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	return nil, nil
+	fmt.Printf("Inside decodeRetrieveObjectRequest.")
+	var request ObjectRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return nil, err
+	}
+	return request, nil
 }
 
-func encodeRetrieveObjectRequest(ctx context.Context, w http.ResponseWriter, resp interface{}) error {
-	w.WriteHeader(200)
-	return nil
+func encodeRetrieveObjectRequest(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+	return json.NewEncoder(w).Encode(response)
 }
