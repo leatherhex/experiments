@@ -21,9 +21,21 @@ type ObjectResponse struct {
 	Err string `json:"err,omitempty"` // errors don't define JSON marshaling
 }
 
+func CreateObject(svc CrudService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		fmt.Println("Inside CreateObject endpoint creator.")
+		req := request.(ObjectRequest)
+		v, err := svc.Create(ctx, req.S)
+		if err != nil {
+			return ObjectResponse{v, err.Error()}, nil
+		}
+		return ObjectResponse{v, ""}, nil
+	}
+}
+
 func RetrieveObject(svc CrudService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		fmt.Printf("Inside RetrieveObject endpoint creator.")
+		fmt.Println("Inside RetrieveObject endpoint creator.")
 		req := request.(ObjectRequest)
 		v, err := svc.Retrieve(ctx, req.S)
 		if err != nil {

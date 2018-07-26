@@ -10,6 +10,7 @@ import (
 )
 
 type CrudService interface {
+	Create(context.Context, string) (string, error)
 	Retrieve(context.Context, string) (string, error)
 }
 
@@ -23,8 +24,16 @@ func NewService(db *sqlx.DB) *Service {
 	}
 }
 
+func (s Service) Create(c context.Context, str string) (string, error) {
+	fmt.Println("Inside Create implementation of interface. str = " + str)
+	if str == "" {
+		return "Hello", nil
+	}
+	return "Hi", nil
+}
+
 func (s Service) Retrieve(c context.Context, str string) (string, error) {
-	fmt.Printf("Inside Retrieve implementation of interface. str = " + str)
+	fmt.Println("Inside Retrieve implementation of interface. str = " + str)
 	if str == "" {
 		return "Hello", nil
 	}
