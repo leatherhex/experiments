@@ -34,10 +34,10 @@ func main() {
 		logger.Log("Could not open db" + err.Error())
 	}
 
-	fmt.Println("Creating service..")
+	fmt.Println("main.go: Creating service..")
 	var svc = crud.NewService(dbConn)
 
-	fmt.Println("Calling handler")
+	fmt.Println("main.go: Calling handler")
 	var h http.Handler
 	{
 		h = crud.MakeHTTPHandler(svc, log.With(logger, "component", "HTTP"))
@@ -63,7 +63,7 @@ func main() {
 /*
 {
   "driver": "postgres",
-  "host": "localhost",
+  "host": "192.168.99.100",
   "port": 5432,
   "enableSSL": false,
   "username": "myuser",

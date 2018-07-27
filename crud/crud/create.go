@@ -36,9 +36,8 @@ type getObjectRequest struct {
 }
 
 type getObjectResponse struct {
-	Object Object `json:"object,omitempty"`
-	s      string `json:"Object,omitempty"`
-	Err    error  `json:"err,omitempty"`
+	ID  string `json:"id,omitempty"`
+	Err error  `json:"err,omitempty"`
 }
 
 func (r getObjectResponse) error() error { return r.Err }
@@ -77,7 +76,7 @@ func (r deleteObjectResponse) error() error { return r.Err }
 
 func CreateObject(svc CrudService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		fmt.Println("Inside CreateObject endpoint creator.")
+		fmt.Println("create.go: Inside CreateObject endpoint creator.")
 		req := request.(ObjectRequest)
 		v, err := svc.Create(ctx, req.S)
 		if err != nil {
@@ -89,7 +88,7 @@ func CreateObject(svc CrudService) endpoint.Endpoint {
 
 func RetrieveObject(svc CrudService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		fmt.Println("Inside RetrieveObject endpoint creator.")
+		fmt.Println("create.go: Inside RetrieveObject endpoint creator.")
 		req := request.(ObjectRequest)
 		v, err := svc.Retrieve(ctx, req.S)
 		if err != nil {
@@ -108,7 +107,7 @@ type Endpoints struct {
 }
 
 func MakeServerEndpoints(s CrudService) Endpoints {
-	fmt.Println("Inside MakeServerEndpoints.")
+	fmt.Println("create.go: Inside MakeServerEndpoints.")
 	return Endpoints{
 		//PostObjectEndpoint:   MakePostObjectEndpoint(s),
 		GetObjectEndpoint: MakeGetObjectEndpoint(s),
@@ -131,10 +130,10 @@ func MakePostObjectEndpoint(s CrudService) endpoint.Endpoint {
 // Primarily useful in a server.
 func MakeGetObjectEndpoint(s CrudService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		fmt.Println("Inside MakeGetObjectEndpoint.")
+		fmt.Println("create.go: Inside MakeGetObjectEndpoint.")
 		req := request.(getObjectRequest)
 		p, e := s.GetObject(ctx, req.ID)
-		return getObjectResponse{Object: p, Err: e}, nil
+		return getObjectResponse{ID: p, Err: e}, nil
 	}
 }
 

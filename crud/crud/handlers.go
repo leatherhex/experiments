@@ -3,6 +3,7 @@ package crud
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -10,6 +11,12 @@ import (
 
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
+)
+
+var (
+	// ErrBadRouting is returned when an expected path variable is missing.
+	// It always indicates programmer error.
+	ErrBadRouting = errors.New("inconsistent mapping between route and handler (programmer error)")
 )
 
 //MakeHandler The function that provides all the transport handling linking for this service
@@ -27,7 +34,7 @@ func MakeHandler(svc CrudService) {
 }
 
 func MakeHTTPHandler(s CrudService, logger log.Logger) http.Handler {
-	fmt.Println("Inside MakeHTTPHandler")
+	fmt.Println("handlers.go: Inside MakeHTTPHandler")
 	r := mux.NewRouter()
 	e := MakeServerEndpoints(s)
 	options := []httptransport.ServerOption{
@@ -35,7 +42,7 @@ func MakeHTTPHandler(s CrudService, logger log.Logger) http.Handler {
 		httptransport.ServerErrorEncoder(encodeError),
 	}
 
-	r.Methods("GET").Path("/my_endpoint/retrieve.json").Handler(httptransport.NewServer(
+	r.Methods("GET").Path("/my_endpoint/{id}").Handler(httptransport.NewServer(
 		e.GetObjectEndpoint,
 		decodeGetObjectRequest,
 		encodeResponse,
@@ -81,7 +88,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 }
 
 func decodeCreateObjectRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	fmt.Println("Inside decodeCreateObjectRequest.")
+	fmt.Println("handlers.go: Inside decodeCreateObjectRequest.")
 	var request ObjectRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return nil, err
@@ -94,15 +101,45 @@ func encodeCreateObjectRequest(ctx context.Context, w http.ResponseWriter, respo
 }
 
 func decodeGetObjectRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	fmt.Println("Inside decodeRetrieveObjectRequest.")
-	var request ObjectRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		return nil, err
+	fmt.Println("handlers.go: Inside decodeRetrieveObjectRequest.")
+	vars := mux.Vars(r)
+	fmt.Println("handlers.go: Inside decodeRetrieveObjectRequest. vars = " + vars["id"])
+	id, ok := vars["id"]
+	if !ok {
+		return nil, ErrBadRouting
 	}
-	return request, nil
+	return getObjectRequest{ID: id}, nil
+	// var request ObjectRequest
+	// if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	// 	return nil, err
+	// }
+	// return request, nil
+}
+
+// func encodeGetProfileRequest(ctx context.Context, req *http.Request, request interface{}) error {
+// 	// r.Methods("GET").Path("/profiles/{id}")
+// 	r := request.(getProfileRequest)
+// 	profileID := url.QueryEscape(r.ID)
+// 	req.URL.Path = "/profiles/" + profileID
+// 	return encodeRequest(ctx, req, request)
+// }
+
+// func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+// 	return json.NewEncoder(w).Encode(response)
+// }
+
+type errorer interface {
+	error() error
 }
 
 func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+	if e, ok := response.(errorer); ok && e.error() != nil {
+		// Not a Go kit transport error, but a business-logic error.
+		// Provide those as HTTP errors.
+		encodeError(ctx, e.error(), w)
+		return nil
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	return json.NewEncoder(w).Encode(response)
 }
 

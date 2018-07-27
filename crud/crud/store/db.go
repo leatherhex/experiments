@@ -1,18 +1,19 @@
 package store
 
 import (
+	"fmt"
+
 	"github.com/jmoiron/sqlx"
-	"github.com/viki-org/notifications-api/src/types"
 )
 
-type RetrieveObjectStoreReq struct {
-	RetrievedBy string
-	ObjectType  string
-	Title       map[types.Language]string
-	Description map[types.Language]string
-	ChannelID   string
-	GroupID     string
-}
+// type RetrieveObjectStoreReq struct {
+// 	RetrievedBy string
+// 	ObjectType  string
+// 	Title       map[types.Language]string
+// 	Description map[types.Language]string
+// 	ChannelID   string
+// 	GroupID     string
+// }
 
 type DB struct {
 	db *sqlx.DB
@@ -28,50 +29,51 @@ func New(db *sqlx.DB) *DB {
 	}
 }
 
-func (db *DB) RetrieveObject(r RetrieveObjectStoreReq) (string, error) {
-	tx, err := db.db.Beginx()
-	if err != nil {
-		return "", err
-	}
-
-	row := tx.QueryRow("select id,name from viki_plans", r.ObjectType, r.RetrievedBy)
-	var idRow IDReturn
-	err = row.Scan(&idRow)
-	if err != nil {
-		tx.Rollback()
-		return "", err
-	}
-
-	err = RetrieveTitleAndDescription(tx, r.Title, r.Description, r.RetrievedBy)
-	if err != nil {
-		return "", err
-	}
-
-	// Since we are creating an Object, we need to enter it into the Objects db
-	_, err = tx.Exec("select id,name from viki_plans", idRow.id, r.GroupID, r.ChannelID, r.RetrievedBy)
-	if err != nil {
-		tx.Rollback()
-		return "", err
-	}
-	tx.Commit()
-	return idRow.id, nil
+type getObjectRequest struct {
+	ID string
 }
 
-func RetrieveTitleAndDescription(tx *sqlx.Tx, title map[types.Language]string, description map[types.Language]string, RetrievedBy string) error {
-	for lang, title := range title {
-		_, err := tx.Exec("select id,name from viki_plans", title, lang, RetrievedBy)
-		if err != nil {
-			tx.Rollback()
-			return err
-		}
-	}
-
-	for lang, description := range description {
-		_, err := tx.Exec("select id,name from viki_plans", description, lang, RetrievedBy)
-		if err != nil {
-			tx.Rollback()
-			return err
-		}
-	}
-	return nil
+type Object struct {
+	ID   string `json:"id"`
+	Name string `json:"name,omitempty"`
 }
+
+// func txStmt(db *DB, stmt *sql.Stmt) *sql.Stmt {
+// 	fmt.Println("db.go: Inside txStmt.")
+// 	tx, err := db.db.Beginx()
+// 	if tx == nil || err != nil {
+// 		return stmt
+// 	}
+// 	return tx.Stmt(stmt)
+// }
+
+func (db *DB) RetrieveObject(r string) (string, error) {
+	fmt.Println("db.go: Inside RetrieveObject. r = " + r)
+	// tx, err := db.db.Beginx()
+	// if tx == nil || err != nil {
+	// 	return "", err
+	// }
+	people := []Object{}
+	db.db.Select(&people, "SELECT id,name FROM viki_plans where id='"+r+"'")
+	first := people[0]
+	return first.Name, nil
+}
+
+// func RetrieveTitleAndDescription(tx *sqlx.Tx, title map[types.Language]string, description map[types.Language]string, RetrievedBy string) error {
+// 	for lang, title := range title {
+// 		_, err := tx.Exec("select id,name from viki_plans", title, lang, RetrievedBy)
+// 		if err != nil {
+// 			tx.Rollback()
+// 			return err
+// 		}
+// 	}
+
+// 	for lang, description := range description {
+// 		_, err := tx.Exec("select id,name from viki_plans", description, lang, RetrievedBy)
+// 		if err != nil {
+// 			tx.Rollback()
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }

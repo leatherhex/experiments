@@ -27,7 +27,7 @@ type CrudService interface {
 	Retrieve(context.Context, string) (string, error)
 
 	PostObject(context.Context, string) (string, error)
-	GetObject(context.Context, string) (Object, error)
+	GetObject(context.Context, string) (string, error)
 	PutObject(context.Context, string) (string, error)
 	PatchObject(context.Context, string) (string, error)
 	DeleteObject(context.Context, string) (string, error)
@@ -46,7 +46,7 @@ func NewService(db *sqlx.DB) *Service {
 }
 
 func (s Service) Create(c context.Context, str string) (string, error) {
-	fmt.Println("Inside Create implementation of interface. str = " + str)
+	fmt.Println("service.go: Inside Create implementation of interface. str = " + str)
 	if str == "" {
 		return "Hello", nil
 	}
@@ -54,7 +54,7 @@ func (s Service) Create(c context.Context, str string) (string, error) {
 }
 
 func (s Service) Retrieve(c context.Context, str string) (string, error) {
-	fmt.Println("Inside Retrieve implementation of interface. str = " + str)
+	fmt.Println("service.go: Inside Retrieve implementation of interface. str = " + str)
 	if str == "" {
 		return "Hello", nil
 	}
@@ -62,21 +62,22 @@ func (s Service) Retrieve(c context.Context, str string) (string, error) {
 }
 
 func (s Service) PostObject(c context.Context, str string) (string, error) {
-	fmt.Println("Inside PostObject implementation of interface. str = " + str)
+	fmt.Println("service.go: Inside PostObject implementation of interface. str = " + str)
 	if str == "" {
 		return "Hello", nil
 	}
 	return "Hi", nil
 }
 
-func (s Service) GetObject(c context.Context, id string) (Object, error) {
-	fmt.Println("Inside GetObject implementation of interface. str = " + id)
+func (s Service) GetObject(c context.Context, id string) (string, error) {
+	fmt.Println("service.go: Inside GetObject implementation of interface. str = " + id)
 	s.mtx.RLock()
 	defer s.mtx.RUnlock()
-	p, ok := s.m[id]
+	//p, ok := s.m[id]
+	p, ok := s.db.RetrieveObject(id)
 	fmt.Println("id = " + id)
-	if !ok {
-		return Object{}, ErrNotFound
+	if ok != nil {
+		return p, ErrNotFound
 	}
 	return p, nil
 }
@@ -90,7 +91,7 @@ func (s Service) PutObject(c context.Context, str string) (string, error) {
 }
 
 func (s Service) PatchObject(c context.Context, str string) (string, error) {
-	fmt.Println("Inside PatchObject implementation of interface. str = " + str)
+	fmt.Println("service.go: Inside PatchObject implementation of interface. str = " + str)
 	if str == "" {
 		return "Hello", nil
 	}
@@ -98,7 +99,7 @@ func (s Service) PatchObject(c context.Context, str string) (string, error) {
 }
 
 func (s Service) DeleteObject(c context.Context, str string) (string, error) {
-	fmt.Println("Inside DeleteObject implementation of interface. str = " + str)
+	fmt.Println("service.go: Inside DeleteObject implementation of interface. str = " + str)
 	if str == "" {
 		return "Hello", nil
 	}
